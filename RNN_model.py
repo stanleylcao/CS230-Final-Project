@@ -7,6 +7,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 from dataset import ChessDataset
 
+from datetime import datetime
+
 
 class RNNModel(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, num_layers) -> None:
@@ -37,7 +39,7 @@ class RNNModel(nn.Module):
         return ratings
 
 
-def train_loop(dataloader, model, loss_fn, optimizer):
+def train_loop(dataloader, model, loss_fn, optimizer, writer=None, epoch_num=None):
     size = len(dataloader.dataset)
     for batch, (X, y) in enumerate(dataloader):
         pred = model(X)
@@ -47,7 +49,12 @@ def train_loop(dataloader, model, loss_fn, optimizer):
         loss.backward()
         optimizer.step()
 
-        if batch % 1 == 0:
+        num_examples_in_batch = X.size(dim=0)
+        avg_train_loss_per_example = loss.item() / num_examples_in_batch
+        if writer is not None:
+            writer.add_scalar('Avg Train Loss Per Batch',
+                              avg_train_loss_per_example, epoch_num)
+        elif batch % 1 == 0:
             loss, num_examples_finished = loss.item(), batch * len(X)
             print(f'Loss = {loss} [{num_examples_finished}/{size}]')
 
@@ -61,10 +68,12 @@ def test_loop(dataloader, model, loss_fn, writer=None, epoch_num=None):
         for X, y in dataloader:
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
-    avg_test_loss = test_loss // num_batches
-    print(f'Avg Test Loss = {avg_test_loss}')
+    avg_test_loss_per_example = test_loss / size
     if writer is not None:
-        writer.add_scalar('Avg Test Loss', avg_test_loss, epoch_num)
+        writer.add_scalar('Avg Test Loss Per Example',
+                          avg_test_loss_per_example, epoch_num)
+    else:
+        print(f'Avg Test Loss = {avg_test_loss_per_example}')
 
 
 learning_rate = 1e-3
@@ -74,6 +83,7 @@ batch_size = 64
 
 def main():
     full_dataset = ChessDataset('for_pandas.csv')
+
     train_size = int(0.8 * len(full_dataset))
     test_size = len(full_dataset) - train_size
     train_dataset, test_dataset = torch.utils.data.random_split(
@@ -92,11 +102,15 @@ def main():
     loss_fn = nn.MSELoss(reduction='mean')
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    writer = SummaryWriter(log_dir='runs/full_dataset')
+    now = datetime.now()
+    experiment_time_str = now.strftime("%d-%m-%Y-%H:%M:%S")
+    writer = SummaryWriter(
+        log_dir=f'runs/small_dataset_normalized/{experiment_time_str}')
 
     for e in range(epochs):
         print(f'Beginning Epoch {e}')
-        train_loop(train_dataloader, model, loss_fn, optimizer)
+        train_loop(train_dataloader, model, loss_fn,
+                   optimizer, writer=writer, epoch_num=e)
         test_loop(test_dataloader, model, loss_fn, writer=writer, epoch_num=e)
 
     writer.close()
