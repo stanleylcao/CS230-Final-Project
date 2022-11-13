@@ -12,8 +12,21 @@ Baseline non-DL model (statistical analysis):
  - Train an LSTM or a sequence model on this dataset.
 
 
-By Thursday: 
-- Understand the dataset
-- How does an LSTM model help our problem
-  - How do we manipulate the data so that the LSTM model will learn
-- Perhaps it is possible to have the LSTM spit out ratings as sequences
+ Project Milestone
+ - Figure out AWS logistics (how to get dataset on cloud computer)
+ - Is our project novel enough?
+ - Complex enough?
+
+ 
+ Next Steps:
+ - End of game token to denote the end of the game
+ - Normalize each feature
+ - Adjusts the number steps of the longest game to be longer than 100 moves
+ - How do we supervise our model?
+  1. What we are currently doing is that we are taking the model's final output,
+     like in the case of a many to one RNN model, and comparing that to the
+     ground truth via MSE loss
+  2. Another alternative is to take the output of each RNN layer application,
+     and  
+
+
