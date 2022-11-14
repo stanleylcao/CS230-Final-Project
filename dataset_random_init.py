@@ -31,7 +31,7 @@ class ChessDataset(Dataset):
         labels_tensor = torch.tensor(
             (df[["WhiteElo", "BlackElo"]]/2000).values)  # (n_steps, 2)
         #df = df[["WhiteElo", "BlackElo"]]/2000
-        #df = df[["eval_normalized"]]
+        #df = df[["eval_normalized", "white_wins", "is_check"]]
         df = df.drop(columns=["WhiteElo", "BlackElo"])
         features_tensor = torch.tensor(df.values)  # (n_steps, n_features)
         return features_tensor.double(), labels_tensor[0, :].double()

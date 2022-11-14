@@ -68,11 +68,10 @@ def test_loop(dataloader, model, loss_fn, writer=None, epoch_num=None):
     with torch.no_grad():
         for X, y in dataloader:
             pred = model(X)
-            print(pred)
             test_loss += loss_fn(pred, y).item()
             #print(y*2000)
-            #print(pred*2000)
-    avg_test_loss_per_example = test_loss / size
+            print(pred*2000)
+    avg_test_loss_per_example = test_loss
     if writer is not None:
         writer.add_scalar('Avg Test Loss Per Example',
                           avg_test_loss_per_example, epoch_num)
@@ -80,9 +79,9 @@ def test_loop(dataloader, model, loss_fn, writer=None, epoch_num=None):
         print(f'Avg Test Loss = {avg_test_loss_per_example}')
 
 
-learning_rate = 0.001
+learning_rate = 0.0001
 epochs = int(1e6)
-batch_size = 256
+batch_size = 512
 
 
 def main():
@@ -96,14 +95,14 @@ def main():
     train_dataloader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(
-        test_dataset, batch_size=batch_size, shuffle=False)
+        test_dataset, batch_size=test_size, shuffle=False)
 
     embedding_size = train_dataset[0][0].size()[1]
 
     model = RNNModel(input_dim=embedding_size, hidden_dim=512,
                      output_dim=2, num_layers=2)
 
-    loss_fn = nn.MSELoss(reduction = 'mean')
+    loss_fn = nn.L1Loss(reduction = 'mean')
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     now = datetime.now()
