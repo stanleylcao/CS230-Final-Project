@@ -28,4 +28,5 @@ class ChessDataset(Dataset):
             df[["WhiteElo", "BlackElo"]].values)  # (n_steps, 2)
         df = df.drop(columns=["WhiteElo", "BlackElo"])
         features_tensor = torch.tensor(df.values)  # (n_steps, n_features)
+        # features_tensor = labels_tensor
         return features_tensor.double(), labels_tensor[0, :].double()

@@ -13,7 +13,8 @@ class ChessDataset(Dataset):
                             'BlackTitle', 'WhiteTitle', 'Category', 'Weekday', 'destination'])
 
         df.apply(pd.to_numeric)
-        df["seconds_remaining"] = df["seconds_remaining"] / df["seconds_remaining"].abs().max()
+        df["seconds_remaining"] = df["seconds_remaining"] / \
+            df["seconds_remaining"].abs().max()
         #df["black_mate_in"] = df["black_mate_in"] / df["black_mate_in"].abs().max()
         #df["white_mate_in"] = df["white_mate_in"] / df["white_mate_in"].abs().max()
         #df["eval_normalized"] = df["eval_normalized"] / df["eval_normalized"].abs().max()
@@ -32,13 +33,21 @@ class ChessDataset(Dataset):
 
     def __getitem__(self, idx):
         df = self.df.iloc[idx * self.n_steps: (idx + 1) * self.n_steps]
-        white_labels = torch.tensor(df.filter(regex='^WhiteElo').values) #shape: n_steps, n_classes_white
-        black_labels =torch.tensor(df.filter(regex='^BlackElo').values)#shape: n_steps, n_classes_black
-        #labels_tensor =
+        # shape: n_steps, n_classes_white
+        white_labels = torch.tensor(df.filter(regex='^WhiteElo').values)
+        # shape: n_steps, n_classes_black
+        black_labels = torch.tensor(df.filter(regex='^BlackElo').values)
+        # labels_tensor =
         df = df[df.columns.drop(list(df.filter(regex='BlackElo')))]
         df = df[df.columns.drop(list(df.filter(regex='WhiteElo')))]
 
         #df = df.drop(columns=["WhiteElo", "BlackElo"])
         features_tensor = torch.tensor(df.values)  # (n_steps, n_features)
 
-        return features_tensor.double(), labels_tensor[0, :].double()
+        clean_white_labels = torch.unsqueeze(white_labels[0], dim=1)
+        clean_black_labels = torch.unsqueeze(black_labels[0], dim=1)
+        # Shape = (num_bins, 2)
+        # labels_tensor = torch.cat(
+        #     (clean_white_labels, clean_black_labels), dim=1)
+        labels_tensor = torch.argmax(white_labels[0])
+        return features_tensor.double(), labels_tensor.long()
