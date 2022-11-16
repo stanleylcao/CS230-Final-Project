@@ -23,7 +23,6 @@ class ChessDataset(Dataset):
 
     def __getitem__(self, idx):
         df = self.df.iloc[idx * self.n_steps: (idx + 1) * self.n_steps]
-
         labels_tensor = torch.tensor(
             df[["WhiteElo", "BlackElo"]].values)  # (n_steps, 2)
         df = df.drop(columns=["WhiteElo", "BlackElo"])

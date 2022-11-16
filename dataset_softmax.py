@@ -24,7 +24,7 @@ class ChessDataset(Dataset):
         df = pd.get_dummies(data=df, columns=['WhiteElo', "BlackElo"])
         self.df = df.drop(columns=["Index", "move", "Index.1"])
         self.df.to_csv("test.csv")
-        self.n_steps = 50
+        self.n_steps = 100
         self.n_examples = df.shape[0] // self.n_steps
         self.n_features = df.shape[1]
 
@@ -47,7 +47,7 @@ class ChessDataset(Dataset):
         clean_white_labels = torch.unsqueeze(white_labels[0], dim=1)
         clean_black_labels = torch.unsqueeze(black_labels[0], dim=1)
         # Shape = (num_bins, 2)
-        # labels_tensor = torch.cat(
-        #     (clean_white_labels, clean_black_labels), dim=1)
-        labels_tensor = torch.argmax(white_labels[0])
+        labels_tensor = torch.cat(
+            (clean_white_labels, clean_black_labels), dim=1)
+        labels_tensor = torch.argmax(labels_tensor, dim=0)  # shape = (2,)
         return features_tensor.double(), labels_tensor.long()

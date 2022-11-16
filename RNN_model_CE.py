@@ -23,7 +23,7 @@ class RNNModel(nn.Module):
                           num_layers=self.num_layers, nonlinearity='tanh', batch_first=True)
 
         self.fc = nn.Linear(in_features=self.hidden_dim,
-                            out_features=self.output_dim)
+                            out_features=2 * self.output_dim)
         self.double()
 
     def forward(self, x):
@@ -39,8 +39,8 @@ class RNNModel(nn.Module):
         # Just take final rating
         ratings = ratings[:, -1, :]  # shape = (B, 2 * output_dim)
         # shape = (B, output_dim, 2)
-        # ratings = torch.reshape(
-        #     ratings, (ratings.size(dim=0), self.output_dim, 2))
+        ratings = torch.reshape(
+            ratings, (ratings.size(dim=0), self.output_dim, 2))
         return ratings
 
 
@@ -48,13 +48,6 @@ def train_loop(dataloader, model, loss_fn, optimizer, writer=None, epoch_num=Non
     size = len(dataloader.dataset)
     for batch, (X, y) in enumerate(dataloader):
         pred = model(X)
-        # print(f'BATCH {batch}')
-        # print("INPUT")
-        # print(X)
-        # predictions = torch.argmax(pred, dim=1)
-        # print(f"PREDICTIONS = {predictions}")
-        # labels = torch.argmax(y, dim=1)
-        # print(f"LABELS = {labels}")
 
         loss = loss_fn(pred, y)
 
@@ -70,6 +63,13 @@ def train_loop(dataloader, model, loss_fn, optimizer, writer=None, epoch_num=Non
         elif batch % 100 == 0:
             loss, num_examples_finished = loss.item(), batch * len(X)
             print(f'Loss = {loss} [{num_examples_finished}/{size}]')
+            # print(f'BATCH {batch}')
+            # print("INPUT")
+            # print(X)
+            # predictions = torch.argmax(pred, dim=1)
+            # print(f"PREDICTIONS = {predictions}")
+            # labels = torch.argmax(y, dim=1)
+            # print(f"LABELS = {y}")
 
 
 def test_loop(dataloader, model, loss_fn, writer=None, epoch_num=None):
@@ -84,7 +84,6 @@ def test_loop(dataloader, model, loss_fn, writer=None, epoch_num=None):
             print('PREDICTIONS')
             print(torch.argmax(pred, dim=1))
             print('LABELS')
-            # print(torch.argmax(y, dim=1))
             print(y)
     avg_test_loss = test_loss / num_batches
     if writer is not None:
@@ -124,9 +123,10 @@ def main():
 
     now = datetime.now()
     experiment_time_str = now.strftime("%d-%m-%Y-%H:%M:%S")
-    # writer = SummaryWriter(
-    #     log_dir=f'runs/small_dataset_normalized_CE_model/{experiment_time_str}')
-    writer = None
+    
+    writer = SummaryWriter(
+        log_dir=f'runs/small_dataset_normalized_CE_model/{experiment_time_str}')
+    # writer = None
 
     for e in range(epochs):
         print(f'Beginning Epoch {e}')
