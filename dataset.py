@@ -19,10 +19,6 @@ def regression_to_softmax(df, colNames, bin_width, max_rating):
     bins = [-np.inf]
     bins = np.append(bins, np.arange(0, max_rating, bin_width))
     bins = np.append(bins, np.inf)
-    labels = ["<0"]
-    for bin in bins[1:-1]:
-        labels = np.append(labels, str(bin))
-    labels = np.append(labels, ">max")
     df["White_bins"] = pd.cut(df[colNames[0]], bins = bins)
     df["Black_bins"] = pd.cut(df[colNames[1]], bins = bins)
     df = pd.get_dummies(data=df, columns=['White_bins', "Black_bins"])
