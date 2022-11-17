@@ -5,6 +5,9 @@ from torch.utils.data import Dataset
 from utils import normalizer
 
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
 class ChessDataset(Dataset):
     def __init__(self, csv_file_path) -> None:
         df = pd.read_csv(csv_file_path)
@@ -35,4 +38,4 @@ class ChessDataset(Dataset):
         #df = df[["eval_normalized", "white_wins", "is_check"]]
         df = df.drop(columns=["WhiteElo", "BlackElo"])
         features_tensor = torch.tensor(df.values)  # (n_steps, n_features)
-        return features_tensor.double(), labels_tensor[0, :].double()
+        return features_tensor.double().to(device), labels_tensor[0, :].double().to(device)

@@ -22,10 +22,11 @@ class RNNModel(nn.Module):
         self.rnn = nn.RNN(input_size=self.input_dim, hidden_size=self.hidden_dim,
                           num_layers=self.num_layers, nonlinearity='tanh', batch_first=True)
         self.inter_dim = self.hidden_dim // 2
-        
-        self.fc1 = nn.Linear(in_features=self.hidden_dim, out_features=self.inter_dim)
+
+        self.fc1 = nn.Linear(in_features=self.hidden_dim,
+                             out_features=self.inter_dim)
         self.fc2 = nn.Linear(in_features=self.inter_dim,
-                            out_features=2 * self.output_dim)
+                             out_features=2 * self.output_dim)
         self.double()
 
     def forward(self, x):
@@ -102,6 +103,9 @@ batch_size = 1
 
 
 def main():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f'Using {device} device')
+
     full_dataset = ChessDataset('for_pandas.csv')
     train_size = int(0.8 * len(full_dataset))
     test_size = len(full_dataset) - train_size
@@ -118,6 +122,7 @@ def main():
 
     model = RNNModel(input_dim=embedding_size, hidden_dim=1024,
                      output_dim=num_bins, num_layers=2)
+    model.to(device)
 
     loss_fn = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
