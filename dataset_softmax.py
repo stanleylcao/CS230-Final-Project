@@ -5,6 +5,8 @@ from torch.utils.data import Dataset
 
 from utils import normalizer, regression_to_softmax
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 class ChessDataset(Dataset):
     def __init__(self, csv_file_path) -> None:
@@ -69,4 +71,4 @@ class ChessDataset(Dataset):
         labels_tensor = torch.cat(
             (clean_white_labels, clean_black_labels), dim=1)
         labels_tensor = torch.argmax(labels_tensor, dim=0)  # shape = (2,)
-        return features_tensor.double(), labels_tensor.long()
+        return features_tensor.double().to(device), labels_tensor.long().to(device)
