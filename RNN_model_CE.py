@@ -21,8 +21,10 @@ class RNNModel(nn.Module):
 
         self.rnn = nn.RNN(input_size=self.input_dim, hidden_size=self.hidden_dim,
                           num_layers=self.num_layers, nonlinearity='tanh', batch_first=True)
-
-        self.fc = nn.Linear(in_features=self.hidden_dim,
+        self.inter_dim = self.hidden_dim // 2
+        
+        self.fc1 = nn.Linear(in_features=self.hidden_dim, out_features=self.inter_dim)
+        self.fc2 = nn.Linear(in_features=self.inter_dim,
                             out_features=2 * self.output_dim)
         self.double()
 
@@ -34,14 +36,15 @@ class RNNModel(nn.Module):
         # h_0 = torch.randn(
         #     size=(self.num_layers, x.size(dim=0), self.hidden_dim)).double()
         out, h_n = self.rnn(x)  # out.size() = [B, L, self.hidden_dim]
-        ratings = self.fc(out)  # shape = (B, L, 2 * output_dim)
+        out = self.fc1(out)
+        logits = self.fc2(out)  # shape = (B, L, 2 * output_dim)
 
-        # Just take final rating
-        ratings = ratings[:, -1, :]  # shape = (B, 2 * output_dim)
+        # Just take final output
+        logits = logits[:, -1, :]  # shape = (B, 2 * output_dim)
         # shape = (B, output_dim, 2)
-        ratings = torch.reshape(
-            ratings, (ratings.size(dim=0), self.output_dim, 2))
-        return ratings
+        logits = torch.reshape(
+            logits, (logits.size(dim=0), self.output_dim, 2))
+        return logits
 
 
 def train_loop(dataloader, model, loss_fn, optimizer, writer=None, epoch_num=None):
@@ -100,7 +103,6 @@ batch_size = 1
 
 def main():
     full_dataset = ChessDataset('for_pandas.csv')
-
     train_size = int(0.8 * len(full_dataset))
     test_size = len(full_dataset) - train_size
     train_dataset, test_dataset = torch.utils.data.random_split(
@@ -109,13 +111,12 @@ def main():
     train_dataloader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(
-        test_dataset, batch_size=batch_size, shuffle=False)
+        test_dataset, batch_size=batch_size, shuffle=True)
 
     embedding_size = train_dataset[0][0].size()[1]
-    # num_bins = train_dataset[0][1].size()[0]
-    num_bins = 17
+    num_bins = full_dataset.num_bins
 
-    model = RNNModel(input_dim=embedding_size, hidden_dim=100,
+    model = RNNModel(input_dim=embedding_size, hidden_dim=1024,
                      output_dim=num_bins, num_layers=2)
 
     loss_fn = nn.CrossEntropyLoss()
@@ -123,10 +124,10 @@ def main():
 
     now = datetime.now()
     experiment_time_str = now.strftime("%d-%m-%Y-%H:%M:%S")
-    
-    writer = SummaryWriter(
-        log_dir=f'runs/small_dataset_normalized_CE_model/{experiment_time_str}')
-    # writer = None
+
+    # writer = SummaryWriter(
+    #     log_dir=f'runs/small_dataset_normalized_CE_model/{experiment_time_str}')
+    writer = None
 
     for e in range(epochs):
         print(f'Beginning Epoch {e}')
