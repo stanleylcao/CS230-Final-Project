@@ -47,4 +47,4 @@ class ChessDataset(Dataset):
         features_tensor = torch.tensor(df.values)  # (n_steps, n_features)
         if not self.sequence_model:
             features_tensor = torch.flatten(features_tensor)
-        return features_tensor.double(), labels_tensor[0, :].double()
+        return features_tensor.double().to(device), labels_tensor[0, :].double().to(device)
