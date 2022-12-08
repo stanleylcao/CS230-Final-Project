@@ -31,7 +31,6 @@ class ChessDataset(Dataset):
         self.df.to_csv("test.csv")
 
 
-
     def __len__(self):
         return self.n_examples
 
