@@ -4,11 +4,13 @@ library(lubridate)
 
 set.seed(1) 
 df <- test_chess_data
-#df < df[sample(nrow(df), 10000), ]
+#df <- df[1:10000,]
 
 df$num_move <- 200 - rowSums(df[,22:221] == '')
 
 df$Event <- gsub("^((\\w+\\W+){2}\\w+).*$","\\1",df$Event)
+
+rm(test_chess_data)
 
 df <-(df %>%
         #Pivot the data along "moves" 
@@ -18,7 +20,7 @@ df <-(df %>%
   #Remove null values 
   #%>%  filter(!is.na(Eval_ply), !is.na(Move_ply), Eval_ply != "", Move_ply != "") 
   %>% mutate(move = as.numeric(move))
-  %>% filter(move <= 100)
+  %>% filter(move <= 150)
   
   #Keep track of what is moved and additional features like whether stockfish detects checkmate
   %>%   mutate(king_moved = ifelse(str_detect(Move_ply, "K"), 1, 0))
@@ -39,6 +41,8 @@ df <-(df %>%
   
 )
 
+gc()
+
 #Handles destination square of move 
 df <- (df 
   %>%   mutate(destination = case_when(is_castle == 1 ~ substr(Move_ply, 0,nchar(as.character(Move_ply))), 
@@ -56,15 +60,17 @@ df <- (df
                                          white_has_mate == 1 ~ 100, 
                                          TRUE ~ as.numeric(as.character(Eval_ply)))
               )
-  %>% mutate(black_mate_in = ifelse(black_has_mate == 1, substr(Eval_ply, 3, nchar(as.character(Eval_ply))), "50")
+  %>% mutate(black_mate_in = ifelse(black_has_mate == 1, substr(Eval_ply, 3, nchar(as.character(Eval_ply))), "100")
                               )
-  %>%    mutate(white_mate_in = ifelse(white_has_mate == 1, substr(Eval_ply, 2, nchar(as.character(Eval_ply))), "50")
+  %>%    mutate(white_mate_in = ifelse(white_has_mate == 1, substr(Eval_ply, 2, nchar(as.character(Eval_ply))), "100")
               )   
   %>% mutate(seconds_remaining = as.numeric(hms(Clock_ply)))
   %>% mutate(white_wins = case_when(Result == "0-1" ~ 0,
                                   Result == "1/2-1/2" ~ 0.5, 
                                     Result == "1-0"~ 1))
 ) 
+
+gc()
 
 df <- (df %>%
          group_by(Index) %>%
@@ -79,6 +85,8 @@ df <- (df %>%
  %>% arrange(Index, move)
  %>%select("Index", "move", everything())
 )
+
+gc()
  
 #Replace NA and NaN with zero, remove irrelevant columns 
 df  <- subset(df, select= -c(Black, BlackRatingDiff, Black, Date, Opening, Result, Round, Site, UTCDate, UTCTime, White, 
@@ -86,10 +94,7 @@ df  <- subset(df, select= -c(Black, BlackRatingDiff, Black, Date, Opening, Resul
 
 
 
-write.csv(df,"Downloads/CS230-Final-Project-master/for_pandas_5000.csv", row.names = FALSE)
-
-
-
+write.csv(df,"Downloads/CS230-Final-Project-master/for_pandas_10k.csv", row.names = FALSE)
 
 
 
