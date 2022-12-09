@@ -2,8 +2,15 @@ library(dplyr)
 library(tidyverse)
 library(lubridate)
 
+set.seed(1) 
 df <- test_chess_data
+#df <- df[1:10000,]
 
+df$num_move <- 200 - rowSums(df[,22:221] == '')
+
+df$Event <- gsub("^((\\w+\\W+){2}\\w+).*$","\\1",df$Event)
+
+rm(test_chess_data)
 
 df <-(df %>%
         #Pivot the data along "moves" 
@@ -13,7 +20,7 @@ df <-(df %>%
   #Remove null values 
   #%>%  filter(!is.na(Eval_ply), !is.na(Move_ply), Eval_ply != "", Move_ply != "") 
   %>% mutate(move = as.numeric(move))
-  %>% filter(move <= 100)
+  %>% filter(move <= 150)
   
   #Keep track of what is moved and additional features like whether stockfish detects checkmate
   %>%   mutate(king_moved = ifelse(str_detect(Move_ply, "K"), 1, 0))
@@ -34,10 +41,13 @@ df <-(df %>%
   
 )
 
+gc()
+
 #Handles destination square of move 
 df <- (df 
   %>%   mutate(destination = case_when(is_castle == 1 ~ substr(Move_ply, 0,nchar(as.character(Move_ply))), 
-                                       pawn_promotion == 1 ~ substr(Move_ply, 0, 1), 
+                                       pawn_promotion == 1 & is_capture == 0 ~ substr(Move_ply, 0, 2), 
+                                       pawn_promotion == 1 & is_capture == 1 ~ substr(Move_ply, 3, 4), 
                                        is_check == 1 | is_checkmate == 1  ~ substr(Move_ply, nchar(as.character(Move_ply))-2, 
                                                                                    nchar(as.character(Move_ply))-1), 
                                        TRUE  ~ substr(Move_ply, nchar(as.character(Move_ply))-1, 
@@ -60,10 +70,14 @@ df <- (df
                                     Result == "1-0"~ 1))
 ) 
 
+gc()
+
 df <- (df %>%
          group_by(Index) %>%
          mutate(lag_eval = lag(eval_normalized, n=1, order_by=move))
+       %>% mutate(lag_destination = lag(destination, n=1, order_by=move))
        %>% ungroup() 
+       %>% mutate(destination = ifelse(destination == "" & lag_destination != "", "STOP", destination))
        )
 
 df <- (df %>%
@@ -71,15 +85,16 @@ df <- (df %>%
  %>% arrange(Index, move)
  %>%select("Index", "move", everything())
 )
+
+gc()
  
 #Replace NA and NaN with zero, remove irrelevant columns 
 df  <- subset(df, select= -c(Black, BlackRatingDiff, Black, Date, Opening, Result, Round, Site, UTCDate, UTCTime, White, 
-                      WhiteRatingDiff, Move_ply, Eval_ply, Clock_ply))
+                      WhiteRatingDiff, Move_ply, Eval_ply, Clock_ply, lag_destination))
 
 
 
-write.csv(df,"for_pandas.csv")
-
+write.csv(df,"Downloads/CS230-Final-Project-master/for_pandas_10k.csv", row.names = FALSE)
 
 
 
