@@ -91,7 +91,7 @@ batch_size = 64
 
 
 def main():
-    full_dataset = ChessDataset('for_pandas_big.csv')
+    full_dataset = ChessDataset('for_pandas_50k.csv')
 
     train_size = int(0.9 * len(full_dataset))
     test_size = len(full_dataset) - train_size
