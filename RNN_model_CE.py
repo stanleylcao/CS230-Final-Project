@@ -64,7 +64,7 @@ def train_loop(dataloader, model, loss_fn, optimizer, writer=None, epoch_num=Non
         if writer is not None:
             writer.add_scalar('Avg Train Loss Per Batch',
                               avg_train_loss_per_example, epoch_num)
-        elif batch % 100 == 0:
+        if batch % 100 == 0:
             loss, num_examples_finished = loss.item(), batch * len(X)
             print(f'Loss = {loss} [{num_examples_finished}/{size}]')
             # print(f'BATCH {batch}')
@@ -85,10 +85,10 @@ def test_loop(dataloader, model, loss_fn, writer=None, epoch_num=None):
         for X, y in dataloader:
             pred = model(X)
             test_loss += loss_fn(pred, y).item()
-            print('PREDICTIONS')
-            print(torch.argmax(pred, dim=1))
-            print('LABELS')
-            print(y)
+            # print('PREDICTIONS')
+            # print(torch.argmax(pred, dim=1))
+            # print('LABELS')
+            # print(y)
     avg_test_loss = test_loss / num_batches
     if writer is not None:
         writer.add_scalar('Avg Test Loss Per Example',
@@ -128,11 +128,12 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     now = datetime.now()
-    experiment_time_str = now.strftime("%d-%m-%Y-%H:%M:%S")
+    # experiment_time_str = now.strftime("%d-%m-%Y-%H:%M:%S")
+    experiment_time_str = 'ubuntu'
 
-    # writer = SummaryWriter(
-    #     log_dir=f'runs/small_dataset_normalized_CE_model/{experiment_time_str}')
-    writer = None
+    writer = SummaryWriter(
+        log_dir=f'runs/small_dataset_normalized_CE_model/{experiment_time_str}')
+    # writer = None
 
     for e in range(epochs):
         print(f'Beginning Epoch {e}')
