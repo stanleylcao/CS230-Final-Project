@@ -108,7 +108,7 @@ def main():
 
 
     model = LSTM_Model(input_dim=embedding_size, hidden_dim=256, static_features = static_feature_size,
-                     output_dim=1, num_layers=3)
+                     output_dim=2, num_layers=3)
 
     loss_fn = nn.L1Loss(reduction = 'mean')
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
