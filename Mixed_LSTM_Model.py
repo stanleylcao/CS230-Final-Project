@@ -22,9 +22,10 @@ class LSTM_Model(nn.Module):
         self.num_layers = num_layers
 
         self.lstm = nn.LSTM(input_size=self.input_dim, hidden_size=self.hidden_dim,
-                          num_layers=self.num_layers, dropout = 0.5, batch_first=True)
+                          num_layers=self.num_layers, dropout = 0.2, batch_first=True)
         self.fc1 = nn.Linear(in_features=self.hidden_dim + self.static_features,
                             out_features=self.hidden_dim)
+        self.dropout = nn.Dropout(0.2)
         self.fc2 = nn.Linear(in_features=self.hidden_dim,
                             out_features=self.output_dim)
         self.double()
@@ -37,9 +38,10 @@ class LSTM_Model(nn.Module):
         h0 = torch.randn(self.num_layers, x_dynamic.size(0), self.hidden_dim).double()
         c0 = torch.randn(self.num_layers, x_dynamic.size(0), self.hidden_dim).double()
 
-        lstm_out, hn = self.lstm(x_dynamic, (h0,c0)) #lstm_out.shape = (B, L, hidden_dim)
+        lstm_out, hn = self.lstm(x_dynamic, (h0, c0)) #lstm_out.shape = (B, L, hidden_dim)
         lstm_out = lstm_out[:, -1, :] #lstm_out.shape = (B, hidden_dim)
         x = torch.cat((lstm_out, x_static), dim = 1)
+        x = self.dropout(x)
         x = torch.relu(self.fc1(x))
         ratings = self.fc2(x)  # shape = (B,output_dim)
 
@@ -61,7 +63,7 @@ def train_loop(dataloader, model, loss_fn, optimizer, writer=None, epoch_num=Non
                               avg_train_loss_per_example, epoch_num)
         elif batch % 1 == 0:
             loss, num_examples_finished = loss.item(), batch * len(X_dynamic)
-            print(f'Loss = {loss} [{num_examples_finished}/{size}]')
+            #print(f'Loss = {loss} [{num_examples_finished}/{size}]')
 
 
 def test_loop(dataloader, model, loss_fn, writer=None, epoch_num=None):
@@ -85,11 +87,11 @@ def test_loop(dataloader, model, loss_fn, writer=None, epoch_num=None):
 
 learning_rate = 0.0001
 epochs = int(100)
-batch_size = 32
+batch_size = 64
 
 
 def main():
-    full_dataset = ChessDataset('for_pandas.csv')
+    full_dataset = ChessDataset('for_pandas_big.csv')
 
     train_size = int(0.9 * len(full_dataset))
     test_size = len(full_dataset) - train_size
@@ -106,7 +108,7 @@ def main():
 
 
     model = LSTM_Model(input_dim=embedding_size, hidden_dim=256, static_features = static_feature_size,
-                     output_dim=2, num_layers=3)
+                     output_dim=1, num_layers=3)
 
     loss_fn = nn.L1Loss(reduction = 'mean')
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
