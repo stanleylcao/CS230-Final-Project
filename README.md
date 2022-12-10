@@ -1,32 +1,18 @@
 # CS230-Final-Project
 
-Baseline non-DL model (statistical analysis): 
-- Given moves and engine evalation as labels
-  - Variance of engine labels for players
-  - As we get later in the game, the stronger player should have gradual increase in engine evaluation
-  - 
-  
- Baseline DL model:
- - Take data from KDD dataset, and generate labels, which are two dimensional vectors. The topp entry will be white, and the bottom entry will be black
- - Input data will be a sequence of vector, each vector describing the state of the game (including the engine evaluation)
- - Train an LSTM or a sequence model on this dataset.
+Models and dataset as discussed in the CS230 report. 
 
-
- Project Milestone
- - Figure out AWS logistics (how to get dataset on cloud computer)
- - Is our project novel enough?
- - Complex enough?
-
- 
- Next Steps:
- - End of game token to denote the end of the game
- - Normalize each feature
- - Adjusts the number steps of the longest game to be longer than 100 moves
- - How do we supervise our model?
-  1. What we are currently doing is that we are taking the model's final output,
-     like in the case of a many to one RNN model, and comparing that to the
-     ground truth via MSE loss
-  2. Another alternative is to take the output of each RNN layer application,
-     and  
-
+Data files: 
+Preprocessing.R: Preprocessing of chessdigits data in R 
+for_pandas.csv: Sample output of Preprocessing.R 
+baseline_model.py: Feedforward neural network model 
+RNN_model.py: Vanilla RNN Model with L1 loss 
+RNN_Model_CE.py: Cross-entropy model for softmax classification approach
+LSTM_model.py: LSTM model with L1 Loss 
+LSTM_Packed.py: LSTM Model with packing of padded sequences (see report) 
+Mixed_LSTM_Model.py: Model with multi-headed architecture ("mix" of static and dynamic features). 
+transformer.py: Encoder-only transformers network. 
+dataset.py: Dataloader for pytorch 
+dataset_mixed.py: Dataloader handling the specific case of the multi-headed architecture
+utils.py: Extra utility functions such as normalization, etc. 
 
