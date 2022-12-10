@@ -20,11 +20,12 @@ class RNNModel(nn.Module):
         self.output_dim = output_dim
         self.num_layers = num_layers
 
-        self.rnn = nn.RNN(input_size=self.input_dim, hidden_size=self.hidden_dim,
-                          num_layers=self.num_layers, nonlinearity='tanh', batch_first=True)
+        self.rnn = nn.GRU(input_size=self.input_dim, hidden_size=self.hidden_dim,
+                          num_layers=self.num_layers, dropout = 0.2, batch_first=True) #Change to nn.RNN for RNN model
         self.fc1 = nn.Linear(in_features=self.hidden_dim,
-                            out_features=512)
-        self.fc2 = nn.Linear(in_features=512,
+                            out_features=256)
+        self.dropout = nn.Dropout(0.2)
+        self.fc2 = nn.Linear(in_features=256,
                             out_features=self.output_dim)
         self.double()
 
@@ -36,7 +37,8 @@ class RNNModel(nn.Module):
         h0 = torch.randn(self.num_layers, x.size(0), self.hidden_dim).double()
 
         out, hn =  self.rnn(x, h0)
-        out = self.fc1(out)
+        out = torch.relu(self.fc1(out))
+        out.dropout = self.dropout(out)
         ratings = self.fc2(out)  # shape = (B, L, output_dim)
 
         # Just take final rating
@@ -88,7 +90,7 @@ batch_size = 32
 
 
 def main():
-    full_dataset = ChessDataset('for_pandas.csv')
+    full_dataset = ChessDataset('for_pandas_big.csv', pack = False)
 
     train_size = int(0.9 * len(full_dataset))
     test_size = len(full_dataset) - train_size
@@ -102,8 +104,8 @@ def main():
 
     embedding_size = train_dataset[0][0].size()[1]
 
-    model = RNNModel(input_dim=embedding_size, hidden_dim=1028,
-                     output_dim=2, num_layers=2)
+    model = RNNModel(input_dim=embedding_size, hidden_dim=256,
+                     output_dim=2, num_layers=3)
 
     loss_fn = nn.L1Loss(reduction = 'mean')
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
