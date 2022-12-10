@@ -3,6 +3,7 @@
 Models and dataset as discussed in the CS230 report. 
 
 Data Related Files
+
 Preprocessing.R: Preprocessing of chessdigits data in R 
 
 for_pandas.csv: Sample output of Preprocessing.R 
