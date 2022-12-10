@@ -120,7 +120,7 @@ batch_size = 32
 
 
 def main():
-    full_dataset = ChessDataset('for_pandas_10k.csv')
+    full_dataset = ChessDataset('for_pandas_big.csv')
 
     train_size = int(0.9 * len(full_dataset))
     test_size = len(full_dataset) - train_size
@@ -136,8 +136,9 @@ def main():
 
     print(embedding_size)
 
-    model = TransformerClassifier(input_size = embedding_size, output_size = 2, dropout = 0.2, n_head = 6, n_layers = 6, dim_feedforward=512)
-
+    model = TransformerClassifier(input_size = embedding_size, output_size = 2, dropout = 0.2, n_head = 6, n_layers = 6, dim_feedforward=256)
+    
+    #Warning: n_head must divide the number of features. If it doesn't we need to pad the number of features for the code to run
 
     loss_fn = nn.L1Loss(reduction = 'mean')
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -151,9 +152,10 @@ def main():
         print(f'Beginning Epoch {e}')
         train_loop(train_dataloader, model, loss_fn,
                    optimizer, writer=None, epoch_num=e)
-        test_loop(test_dataloader, model, loss_fn, writer=None, epoch_num=e)
+        test_loop(test_dataloader, model, loss_fn, writer=writer, epoch_num=e)
     writer.close()
 
 
 if __name__ == '__main__':
     main()
+
